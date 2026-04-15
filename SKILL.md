@@ -2,7 +2,7 @@
 name: debug-controller-generator
 description: Create debug controllers, register routes and update admin endpoints documentation.
 metadata:
-  author: runy
+  author: skill-author
   version: "1.0.0"
   argument-hint: <ControllerName>
 ---

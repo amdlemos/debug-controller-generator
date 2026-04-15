@@ -1,6 +1,6 @@
 # Debug Controller Generator Skill
 
-Skill to scaffold debug controllers, update admin docs and register routes for the Runy backend.
+Skill to scaffold debug controllers, update admin docs and register routes for a Laravel backend.
 
 Usage (local):
 

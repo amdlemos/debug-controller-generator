@@ -25,7 +25,7 @@ echo "Created $CONTROLLER_FILE"
 
 # Append documentation to dev-docs/admin-endpoints.md
 DOC_FILE="dev-docs/admin-endpoints.md"
-DOC_ENTRY="\n### Debug — $CONTROLLER_NAME\n\nEndpoint for $CONTROLLER_NAME.\n\n```\nGET /api/admin/debug/$KEBAB\n```\n\n**Autenticação:** auth:sanctum (Bearer token).\n\n"
+DOC_ENTRY="\n### Debug — $CONTROLLER_NAME\n\nEndpoint de diagnóstico implementado pelo controller `app/Http/Controllers/Debug/$CONTROLLER_NAME.php`.\n\n```\nGET /api/admin/debug/$KEBAB\n```\n\n**Autenticação:** `auth:sanctum` (Bearer token).\n\n**Implementação:** `app/Http/Controllers/Debug/$CONTROLLER_NAME.php`\n\n"
 
 grep -q "Debug — $CONTROLLER_NAME" "$DOC_FILE" || printf "%s" "$DOC_ENTRY" >> "$DOC_FILE" && echo "Appended docs to $DOC_FILE"
 
@@ -60,3 +60,11 @@ if ! grep -Fq "$ROUTE_LINE" "$ROUTES_FILE"; then
 fi
 
 echo "Done: $CONTROLLER_FILE, $DOC_FILE, $ROUTES_FILE"
+
+# Suggest a semantic commit message in Portuguese (do not commit automatically)
+COMMIT_MSG="chore(debug): adicionar controller $CONTROLLER_NAME, rota /admin/debug/$KEBAB e documentação"
+echo "\nSugestão de commit (semântico, em português):"
+echo "$COMMIT_MSG"
+echo "Execute os comandos a seguir para revisar e commitar as mudanças:"
+echo "  git add $CONTROLLER_FILE $DOC_FILE $ROUTES_FILE"
+echo "  git commit -m \"$COMMIT_MSG\""

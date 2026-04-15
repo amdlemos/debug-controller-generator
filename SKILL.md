@@ -2,7 +2,7 @@
 name: debug-controller-generator
 description: Create debug controllers, register routes and update admin endpoints documentation.
 metadata:
-  author: skill-author
+  author: amdlemos
   version: "1.0.0"
   argument-hint: <ControllerName>
 ---
@@ -29,6 +29,8 @@ Notes on editing:
 
 - The skill will not overwrite an existing controller file; it will error if the file already exists.
 - The skill will insert a route registration as a route using `Route::get('admin/debug/<kebab-name>', [\App\Http\Controllers\Debug\<ControllerName>::class, '__invoke']);` appended near other debug routes. If the Debug import block is missing it will add a `use App\Http\Controllers\Debug\<ControllerName>;` import at the top.
+
+Important: this skill will NOT perform any git commit operations. Em vez disso, o gerador irá sugerir uma mensagem de commit semântica em português para que você possa revisar e executar o commit manualmente.
 
 Implementation details:
 

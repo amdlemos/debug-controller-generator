@@ -1,42 +1,32 @@
 ---
 name: debug-controller-generator
-description: Create debug controllers, register routes and update admin endpoints documentation.
+description: Create a debug controller for investigating a Laravel app — querying Eloquent models, generating reports, exporting data, inspecting logs, etc. Registers its route and, if the gen-http skill is available, generates a .http file to test it.
 metadata:
   author: amdlemos
-  version: "1.0.0"
+  version: "2.0.0"
   argument-hint: <ControllerName>
 ---
 
 # Debug Controller Generator
 
-This skill scaffolds a debug controller under `app/Http/Controllers/Debug/`, appends an entry to `dev-docs/admin-endpoints.md`, and registers the route at the end of `routes/api.php` inside the existing debug routes block.
+Scaffolds a debug controller under `app/Http/Controllers/Debug/` and registers its route in `routes/api.php`. The controller is a starting point for ad-hoc investigation work — querying Eloquent models, building reports, exporting data, digging through logs — not a fixed-purpose endpoint, so the scaffold stays minimal and the dev fills in the actual logic afterwards.
 
-Usage:
+There is no script here: perform every step below yourself with your normal file tools.
 
-1. Run the skills CLI with a controller name (for example `DebugMyThingController`):
+## Step-by-step process
 
-```bash
-npx skills run debug-controller-generator -- DebugMyThingController
-```
+### 1. Resolve the controller name
 
-2. What this skill will do:
+Take the name from the user's request (e.g. `DebugMyThingController`). If they didn't give one, ask for it. Keep the `Debug` prefix convention if that's what the project already uses for this folder.
 
-- Create `app/Http/Controllers/Debug/<ControllerName>.php` with a simple invokable controller scaffold.
-- Add a small documented endpoint entry to `dev-docs/admin-endpoints.md` under the Debug section.
-- Register a route at the end of `routes/api.php` inside the Debug routes area (group prefix `admin/debug`), keeping the file imports organized.
+Derive the route slug from the name: strip a trailing `Controller`, convert to kebab-case (`DebugMyThingController` → `my-thing`).
 
-Notes on editing:
+### 2. Create the controller file
 
-- The skill will not overwrite an existing controller file; it will error if the file already exists.
-- The skill will insert a route registration as a route using `Route::get('admin/debug/<kebab-name>', [\App\Http\Controllers\Debug\<ControllerName>::class, '__invoke']);` appended near other debug routes. If the Debug import block is missing it will add a `use App\Http\Controllers\Debug\<ControllerName>;` import at the top.
+Target path: `app/Http/Controllers/Debug/<ControllerName>.php`.
 
-Important: this skill will NOT perform any git commit operations. Em vez disso, o gerador irá sugerir uma mensagem de commit semântica em português para que você possa revisar e executar o commit manualmente.
-
-Implementation details:
-
-- The skill should be implemented as a small shell script or the SKILL runner provided by `skills.sh`. It must perform safe edits (create file, append docs, append route) and print the three changed file paths when complete.
-
-Example generated controller content (invokable):
+- If the file already exists, stop and tell the user — never overwrite an existing controller.
+- Otherwise, use `controller_template.php` (in this skill's directory) as the base, replacing `__CONTROLLER_NAME__` with the actual class name. It scaffolds an invokable controller that validates the request via `$request->validate([...])`, following standard Laravel conventions:
 
 ```php
 <?php
@@ -50,9 +40,41 @@ class DebugMyThingController
 {
     public function __invoke(Request $request): JsonResponse
     {
-        return response()->json(['success' => true, 'message' => 'Debug endpoint active']);
+        $validated = $request->validate([
+            //
+        ]);
+
+        return response()->json(['success' => true, 'data' => $validated]);
     }
 }
 ```
 
-If you want me to create the controller now, reply with the controller name to generate (e.g. `DebugExampleController`).
+### 3. Register the route
+
+Open `routes/api.php` and find the existing debug routes area (typically a group with prefix `admin/debug`, or a cluster of routes already using `App\Http\Controllers\Debug\...`). Match the project's existing style rather than assuming one fixed shape.
+
+- Add `use App\Http\Controllers\Debug\<ControllerName>;` near the other Debug imports if it isn't there yet.
+- Add the route near the other debug routes:
+  ```php
+  Route::get('admin/debug/<kebab-slug>', [<ControllerName>::class, '__invoke']);
+  ```
+- If a group already wraps `admin/debug` with the array-callable shorthand or a different HTTP verb pattern, follow that pattern instead of forcing this exact line.
+
+### 4. Generate a .http test file — via the gen-http skill
+
+Once the controller and route exist, check whether the `gen-http` skill is available (it will be listed among your available skills). If it is, invoke it for the controller you just created so the dev gets a ready-to-use `.http` request for the new endpoint.
+
+If `gen-http` is not available, skip this step entirely — don't hand-write a `.http` file as a substitute, and don't create any other documentation file in its place.
+
+### 5. Suggest a commit — don't commit automatically
+
+This skill never runs `git commit`. After the files are in place, suggest a semantic commit message in Portuguese and let the user review and run it themselves, e.g.:
+
+```
+chore(debug): adicionar controller <ControllerName> e rota /admin/debug/<kebab-slug>
+```
+
+```bash
+git add app/Http/Controllers/Debug/<ControllerName>.php routes/api.php
+git commit -m "chore(debug): adicionar controller <ControllerName> e rota /admin/debug/<kebab-slug>"
+```
